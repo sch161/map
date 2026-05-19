@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAFE MIND - 전세사기 안심 시그널 지도</title>
+
+    <script type="text/javascript"
+        src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=34e3e8f0cc310be59e8558bea45c7da9&libraries=services&autoload=false"></script>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            background-color: #f8f9fa;
+        }
+
+        .custom-overlay {
+            background: #ffffff;
+            padding: 14px;
+            border-radius: 10px;
+            border: 2px solid #E63946;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+            font-size: 13px;
+            line-height: 1.6;
+            width: 290px;
+        }
+
+        .overlay-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .data-fact {
+            background: #FFF0F1;
+            color: #E63946;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin: 6px 0;
+        }
+
+        .search-btn {
+            display: block;
+            text-align: center;
+            background: #1B263B;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="map"></div>
+
+    <script>
+        kakao.maps.load(function () {
+            var mapContainer = document.getElementById('map');
+            var mapOption = {
+                // 수도권 전체가 한눈에 들어오도록 중심점을 안양 근처로 잡고 레벨을 9로 조정했습니다.
+                center: new kakao.maps.LatLng(37.4500, 126.9200),
+                level: 10
+            };
+
+            var map = new kakao.maps.Map(mapContainer, mapOption);
+
+            // 📊 수도권 전세사기/보증사고 다발 10대 핵심 지역 데이터 (좌표 매핑 완료)
+            var realEstateDangerZones = [
+                {
+                    name: "서울시 강서구 화곡동", lat: 37.5323, lng: 126.8465,
+                    grade: "위험(심각)", fact: "강서구 전세 피해의 69% 집중 구역",
+                    desc: "HUG 보증사고액 서울 최다 지역. 빌라왕 조직적 사기 세력의 핵심 타깃 구역.", color: "#E63946", radius: 2500
+                },
+                {
+                    name: "인천시 미추홀구 주안동", lat: 37.4611, lng: 126.6796,
+                    grade: "위험(심각)", fact: "인천 전체 피해주택의 60% 이상 집중",
+                    desc: "속칭 '건축왕' 전세사기 사태 핵심 구역. 나홀로아파트 및 다세대 경매 리스크 극심.", color: "#E63946", radius: 2500
+                },
+                {
+                    name: "경기도 부천시 심곡동", lat: 37.4842, lng: 126.7828,
+                    grade: "위험(심각)", fact: "HUG 지정 상습 채무불이행 임대인 거주 1위",
+                    desc: "악성 임대인 명단 최다 등록 지역. 신축 빌라 분양 대행사와 연계된 깡통전세 주의.", color: "#E63946", radius: 2200
+                },
+                {
+                    name: "서울시 관악구 신림동", lat: 37.4764, lng: 126.9366,
+                    grade: "주의(경고)", fact: "2030 사회초년생/청년층 피해 집중",
+                    desc: "대학가 주변 원룸, 다가구 주택의 불법 쪼개기 및 선순위 보증금 은닉 사고 빈발.", color: "#F4A261", radius: 1800
+                },
+                {
+                    name: "경기도 수원시 권선동", lat: 37.2582, lng: 127.0298,
+                    grade: "주의(경고)", fact: "경기 남부권 집단 보증금 미반환 구역",
+                    desc: "특정 임대인 일가 법인 동원 대규모 빌라 사기 고소 지역. 연쇄 경매 위험 진행 중.", color: "#F4A261", radius: 2000
+                },
+                {
+                    name: "서울시 구로구 개봉동", lat: 37.4950, lng: 126.8580,
+                    grade: "주의(경고)", fact: "연립·다세대 깡통전세가율 85% 상회",
+                    desc: "매매가 대비 전세가 비율이 비정상적으로 높아 집값 하락 시 보증금 미반환 리스크 급증.", color: "#F4A261", radius: 1800
+                },
+                {
+                    name: "경기도 고양시 일산동구 중산동", lat: 37.6780, lng: 126.7850,
+                    grade: "주의(경고)", fact: "경기 북부 빌라/오피스텔 보증사고 다발",
+                    desc: "바지임대인을 내세운 전세 계약 후 잠적 패턴 빈발. 주변 시세 대조 필수 구역.", color: "#F4A261", radius: 2000
+                },
+                {
+                    name: "인천시 부평구 부평동", lat: 37.4895, lng: 126.7240,
+                    grade: "위험(심각)", fact: "부평구 전세 피해 지원 신청 전국 최상위권",
+                    desc: "오피스텔 및 신축 빌라 중심 동시진행 깡통전세 기법 만연. 등기부등본 신탁 여부 확인 필수.", color: "#E63946", radius: 2200
+                },
+                {
+                    name: "서울시 금천구 독산동", lat: 37.4670, lng: 126.8960,
+                    grade: "주의(경고)", fact: "HUG 전세보증금 반환보증 거절율 증가 세터",
+                    desc: "공시가격 부풀리기를 통한 무갭투자 성행 구역. 감정평가서 위조 여부 주의 요망.", color: "#F4A261", radius: 1800
+                },
+                {
+                    name: "경기도 광주시 송정동", lat: 37.4200, lng: 127.2550,
+                    grade: "주의(경고)", fact: "외곽 지역 신축 빌라 단지 분양 사기 타깃",
+                    desc: "높은 리베이트를 미끼로 삼은 전세 세입자 유인 및 악성 임대인 명의 변경 사고 빈발.", color: "#F4A261", radius: 2300
+                }
+            ];
+
+            // 10개 지역 순회하며 지도에 시그널 원과 마커 주입
+            realEstateDangerZones.forEach(function (zone) {
+                var coords = new kakao.maps.LatLng(zone.lat, zone.lng);
+
+                // 위험 범위 원형 시그널
+                var circle = new kakao.maps.Circle({
+                    center: coords,
+                    radius: zone.radius,
+                    strokeWeight: 2,
+                    strokeColor: zone.color,
+                    strokeOpacity: 0.8,
+                    strokeStyle: 'solid',
+                    fillColor: zone.color,
+                    fillOpacity: 0.2
+                });
+                circle.setMap(map);
+
+                // 마커 배치
+                var marker = new kakao.maps.Marker({
+                    map: map,
+                    position: coords
+                });
+
+                // 세련된 레이아웃 팝업 정보창
+                var contentString = `
+            <div class="custom-overlay">
+                <div class="overlay-title" style="color:${zone.color};">⚠️ SAFE MIND 안심 시그널 [${zone.grade}]</div>
+                <b>위치:</b> ${zone.name}<br>
+                <div class="data-fact">📊 피해 데이터: ${zone.fact}</div>
+                <b>위험 분석:</b> ${zone.desc}<br>
+                <a href="https://www.khug.or.kr/jeonse/web/s01/s010321.jsp" target="_blank" class="search-btn">
+                    🔍 계약 전 악성 임대인 명단 조회
+                </a>
+            </div>
+        `;
+
+                var infowindow = new kakao.maps.InfoWindow({
+                    content: contentString,
+                    removable: true
+                });
+
+                kakao.maps.event.addListener(marker, 'click', function () {
+                    infowindow.open(map, marker);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
